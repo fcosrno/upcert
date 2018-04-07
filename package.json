@@ -1,0 +1,20 @@
+{
+  "name": "upcert",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon -e ts -w ./src -x npm run watch:serve",
+    "watch:serve": "ts-node --inspect -- src/start.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^9.6.2",
+    "nodemon": "^1.17.3",
+    "ts-node": "^5.0.1",
+    "tsc-watch": "^1.0.17",
+    "typescript": "^2.8.1"
+  }
+}
