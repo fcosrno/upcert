@@ -1,10 +1,11 @@
 import { spawn } from 'child_process';
 import { zip } from 'rxjs/observable/zip';
 import { Observable } from 'rxjs/Observable';
+import dotenv from 'dotenv';
 
 const observables: Array<Observable<any>> = [];
 
-['google.com', 'amazon.com'].forEach(n => {
+process.env.SITES.split(',').forEach(n => {
   const command = spawn('sh', [
     '-c',
     `echo | openssl s_client -connect ${n}:443 -servername ${n} 2>/dev/null | openssl x509 -noout -enddate`
