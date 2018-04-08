@@ -3,6 +3,7 @@ import { zip } from 'rxjs/observable/zip';
 import { Observable } from 'rxjs/Observable';
 import dotenv from 'dotenv';
 import * as moment from 'moment';
+import { sortBy } from 'lodash';
 
 const observables: Array<Observable<any>> = [];
 
@@ -27,6 +28,8 @@ process.env.SITES.split(',').forEach(site => {
         observer.next({
           site,
           timeAgo,
+          daysLeft: moment(new Date(expirationDate)).diff(moment(), 'days'),
+          unix: moment(new Date(expirationDate)).unix(),
           message: `${site} expires ${timeAgo} on ${expirationDate}`
         });
       });
@@ -38,7 +41,7 @@ process.env.SITES.split(',').forEach(site => {
 });
 
 zip(...observables).subscribe(report => {
-  console.log(report);
+  console.log(sortBy(report, ['unix']));
 });
 
 // TODO MVP: Email a report of expiration dates
