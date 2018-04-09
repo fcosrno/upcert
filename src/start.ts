@@ -4,9 +4,9 @@ import { Observable } from 'rxjs/Observable';
 import dotenv from 'dotenv';
 import * as moment from 'moment';
 import { sortBy } from 'lodash';
+import * as sgMail from '@sendgrid/mail';
 
 const observables: Array<Observable<any>> = [];
-
 process.env.SITES.split(',').forEach(site => {
   const command = spawn('sh', [
     '-c',
@@ -28,9 +28,9 @@ process.env.SITES.split(',').forEach(site => {
         observer.next({
           site,
           timeAgo,
+          expirationDate,
           daysLeft: moment(new Date(expirationDate)).diff(moment(), 'days'),
-          unix: moment(new Date(expirationDate)).unix(),
-          message: `${site} expires ${timeAgo} on ${expirationDate}`
+          unix: moment(new Date(expirationDate)).unix()
         });
       });
       command.stderr.on('data', function(data) {
@@ -41,8 +41,32 @@ process.env.SITES.split(',').forEach(site => {
 });
 
 zip(...observables).subscribe(report => {
-  console.log(sortBy(report, ['unix']));
+  // Generate email message from report
+  const { subject, html } = generateMessage(sortBy(report, ['unix']));
+
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  const msg: any = {
+    to: process.env.EMAIL_TO.split(','),
+    from: 'upcert@adapter-dc.com',
+    subject,
+    html
+  };
+
+  sgMail.send(msg);
 });
 
-// TODO MVP: Email a report of expiration dates
-// TODO If expires date is within the week, email
+const generateMessage = report => {
+  let html = '<table><tr><th>Expires</th><th>Site</th><th>Date</th></tr>';
+  report.forEach(n => {
+    html += `<tr><td>${n.timeAgo}</td><td>${n.site}</td><td>${
+      n.expirationDate
+    }</td></tr>`;
+  });
+  html += '</table>';
+  return {
+    subject: `The next certificate expires ${report[0].timeAgo}`,
+    html
+  };
+};
+
+// TODO Only email it the latest expires within the week or month?
