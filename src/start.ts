@@ -88,16 +88,24 @@ const getCertExpiration = ({ host, container }): Observable<any> => {
       });
       observer.complete();
     }
-    spawn('sh', [
+    const command = spawn('sh', [
       '-c',
       `openssl x509 -in /etc/certs/${host}.crt -noout -text | grep Not\\ After`
-    ]).stdout.on('data', function(data) {
+    ]);
+    command.stdout.on('data', function(data) {
       observer.next({
         host,
         container,
         expirationDate: parseDate(data.toString())
       });
       observer.complete();
+    });
+    command.on('exit', function(code) {
+      // Also complete when exit code is 1
+      // These are domains that don't have a crt
+      if (code === 1) {
+        observer.complete();
+      }
     });
   });
 };
