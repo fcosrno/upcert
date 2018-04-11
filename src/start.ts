@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
-import { map, mergeMap, toArray } from 'rxjs/operators';
+import { map, mergeMap, toArray, distinct } from 'rxjs/operators';
 import dotenv from 'dotenv';
 import * as moment from 'moment';
 import { sortBy } from 'lodash';
@@ -115,6 +115,9 @@ containers
         console.log(container);
       }
       return getContainerHost(container);
+    }),
+    distinct(x => {
+      return x.host;
     }),
     mergeMap((data: any) => {
       if (debug) {
