@@ -14,7 +14,7 @@ const parseDate = (string: string) => {
 
 const generateMessage = report => {
   let html =
-    '<table border="1" cellpadding="5" cellspacing="5><tr><th>Expires</th><th>Site</th><th>Proxy</th><th>Disk</th><th>LetsEncrypt</th></tr>';
+    '<table border="1" cellpadding="5" cellspacing="5"><tr><th>Expires</th><th>Site</th><th>Proxy</th><th>Disk</th><th>LetsEncrypt</th></tr>';
   report.forEach(n => {
     html += `<tr><td>${n.timeAgo}</td><td>${n.host}</td><td>${
       n.expirationDate.proxy
