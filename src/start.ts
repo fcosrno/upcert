@@ -100,9 +100,15 @@ const getCertExpiration = ({ host, container }): Observable<any> => {
 containers
   .pipe(
     mergeMap((container: string) => {
+      if (debug) {
+        console.log(container);
+      }
       return getContainerHost(container);
     }),
     mergeMap((data: any) => {
+      if (debug) {
+        console.log(data);
+      }
       return getCertExpiration(data);
     }),
     map((data: any) => {
@@ -114,21 +120,32 @@ containers
         'days'
       );
       const unix = moment(new Date(data.expirationDate)).unix();
-      return { ...data, timeAgo, daysLeft, unix };
+
+      const report = { ...data, timeAgo, daysLeft, unix };
+      if (debug) {
+        console.log(report);
+      }
+      return report;
     })
   )
   .pipe(toArray())
   .subscribe(report => {
-    // Generate email message from report
-    const { subject, html } = generateMessage(sortBy(report, ['unix']));
+    if (debug) {
+      console.log(report);
+    }
 
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    const msg: any = {
-      to: process.env.EMAIL_TO.split(','),
-      from: 'upcert@adapter-dc.com',
-      subject,
-      html
-    };
+    if (process.env.SENDGRID_API_KEY && process.env.EMAIL_TO) {
+      // Generate email message from report
+      const { subject, html } = generateMessage(sortBy(report, ['unix']));
 
-    sgMail.send(msg);
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      const msg: any = {
+        to: process.env.EMAIL_TO.split(','),
+        from: 'upcert@adapter-dc.com',
+        subject,
+        html
+      };
+
+      sgMail.send(msg);
+    }
   });
