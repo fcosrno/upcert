@@ -23,6 +23,14 @@ Create a `.env` file with two variables: `SENDGRID_API_KEY` and `EMAIL_TO`. You 
 
 `npm run start`
 
+## Cron
+
+You can cron `Upcert` by executing `cron.sh`, located at the root of the project. Make sure the file has executable permissions.
+
+```
+0 10 * * MON bash /path/to/upcert/cron.sh >/dev/null 2>&1
+```
+
 ## Troubleshoot
 
 Set `DEBUG` to true in `.env` to see a log. If you want to disable the email, just comment out `SENDGRID_API_KEY` and `EMAIL_TO` in the `.env`.
