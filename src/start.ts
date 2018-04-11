@@ -85,7 +85,7 @@ const getCertExpiration = ({ host, container }): Observable<any> => {
     }
     spawn('sh', [
       '-c',
-      `openssl x509 -in /etc/certs/${host}.crt -noout -text | grep Not\ After`
+      `openssl x509 -in /etc/certs/${host}.crt -noout -text | grep Not\\ After`
     ]).stdout.on('data', function(data) {
       observer.next({
         host,
