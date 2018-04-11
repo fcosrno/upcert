@@ -13,10 +13,13 @@ const parseDate = (string: string) => {
 };
 
 const generateMessage = report => {
-  let html = '<table><tr><th>Expires</th><th>Site</th><th>Date</th></tr>';
+  let html =
+    '<table border="1" cellpadding="5" cellspacing="5><tr><th>Expires</th><th>Site</th><th>Proxy</th><th>Disk</th><th>LetsEncrypt</th></tr>';
   report.forEach(n => {
     html += `<tr><td>${n.timeAgo}</td><td>${n.host}</td><td>${
-      n.expirationDate
+      n.expirationDate.proxy
+    }</td><td>${n.expirationDate.disk}</td><td>${
+      n.expirationDate.public
     }</td></tr>`;
   });
   html += '</table>';
@@ -76,13 +79,56 @@ const getContainerHost = (container: string): Observable<any> => {
     });
   });
 };
-const getCertExpiration = ({ host, container }): Observable<any> => {
+const getPublishedCertExpiration = (
+  { host, container, expirationDate },
+  localhost: boolean
+): Observable<any> => {
+  let endPoint = 'localhost';
+  if (!localhost) endPoint = host;
+
+  const command = spawn('sh', [
+    '-c',
+    `echo | openssl s_client -connect ${endPoint}:443 -servername ${host} 2>/dev/null | openssl x509 -noout -enddate`
+  ]);
+
+  return Observable.create(observer => {
+    command.stdout.on('data', function(data: any) {
+      // console.log(`Data: ${data}`);
+
+      const date = data
+        .toString()
+        .replace('notAfter=', '')
+        .replace('\n', '');
+
+      expirationDate = { ...expirationDate, proxy: date };
+      if (!localhost) {
+        expirationDate = { ...expirationDate, public: date };
+      }
+
+      observer.next({
+        host,
+        container,
+        expirationDate
+      });
+      observer.complete();
+    });
+    command.on('exit', function(code) {
+      // Also complete when exit code is 1
+      // These are domains that don't have a crt
+      if (code === 1) {
+        observer.complete();
+      }
+    });
+  });
+};
+
+const getDiskCertExpiration = ({ host, container }): Observable<any> => {
   return Observable.create(observer => {
     if (debug && process.env.LOCAL_DEV_DATE) {
       observer.next({
         host,
         container,
-        expirationDate: parseDate(process.env.LOCAL_DEV_DATE)
+        expirationDate: { disk: parseDate(process.env.LOCAL_DEV_DATE) }
       });
       observer.complete();
     }
@@ -94,7 +140,7 @@ const getCertExpiration = ({ host, container }): Observable<any> => {
       observer.next({
         host,
         container,
-        expirationDate: parseDate(data.toString())
+        expirationDate: { disk: parseDate(data.toString()) }
       });
       observer.complete();
     });
@@ -116,24 +162,36 @@ containers
       }
       return getContainerHost(container);
     }),
-    distinct(x => {
+    distinct((x: any) => {
       return x.host;
     }),
     mergeMap((data: any) => {
       if (debug) {
         console.log(data);
       }
-      return getCertExpiration(data);
+      return getDiskCertExpiration(data);
+    }),
+    mergeMap((data: any) => {
+      if (debug) {
+        console.log(data);
+      }
+      return getPublishedCertExpiration(data, false);
+    }),
+    mergeMap((data: any) => {
+      if (debug) {
+        console.log(data);
+      }
+      return getPublishedCertExpiration(data, true);
     }),
     map((data: any) => {
-      const timeAgo = moment(new Date(data.expirationDate))
+      const timeAgo = moment(new Date(data.expirationDate.proxy))
         .endOf('day')
         .fromNow();
-      const daysLeft = moment(new Date(data.expirationDate)).diff(
+      const daysLeft = moment(new Date(data.expirationDate.proxy)).diff(
         moment(),
         'days'
       );
-      const unix = moment(new Date(data.expirationDate)).unix();
+      const unix = moment(new Date(data.expirationDate.proxy)).unix();
 
       const report = { ...data, timeAgo, daysLeft, unix };
       if (debug) {
