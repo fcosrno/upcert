@@ -8,7 +8,7 @@ The script traverses all local containers to get a list of domains, defined as `
 
 ### Requirements
 
-1.  Node
+1.  [nvm](https://github.com/creationix/nvm)
 2.  A Sendgrid account with an api key for `SENDGRID_API_KEY` in the `.env` file.
 
 ## Setup
