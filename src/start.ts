@@ -1,9 +1,3 @@
-// This script traverses all local containers to get a list of domains,
-// then checks the date for each ssl locally, bypassing the CloudFlare Full SSL (Strict)
-// obfuscation
-//
-// TODO Only email it the latest expires within the week or month?
-
 import { spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { map, mergeMap, toArray } from 'rxjs/operators';
