@@ -23,6 +23,10 @@ Create a `.env` file with two variables: `SENDGRID_API_KEY` and `EMAIL_TO`. You 
 
 `npm run start`
 
+## Troubleshoot
+
+Set `DEBUG` to true in `.env` to see a log. If you want to disable the email, just comment out `SENDGRID_API_KEY` and `EMAIL_TO` in the `.env`.
+
 ## Manual equivalent
 
 Manually you would run `docker ps -q` to get a list of containers. You'd then have to run the following command for each container to get the host name.
