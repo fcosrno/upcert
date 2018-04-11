@@ -1,64 +1,27 @@
+// This script traverses all local containers to get a list of domains,
+// then checks the date for each ssl locally, bypassing the CloudFlare Full SSL (Strict)
+// obfuscation
+//
+// TODO Only email it the latest expires within the week or month?
+
 import { spawn } from 'child_process';
-import { zip } from 'rxjs/observable/zip';
 import { Observable } from 'rxjs/Observable';
+import { map, mergeMap, toArray } from 'rxjs/operators';
 import dotenv from 'dotenv';
 import * as moment from 'moment';
 import { sortBy } from 'lodash';
 import * as sgMail from '@sendgrid/mail';
 
-const observables: Array<Observable<any>> = [];
-process.env.SITES.split(',').forEach(site => {
-  const command = spawn('sh', [
-    '-c',
-    `echo | openssl s_client -connect ${site}:443 -servername ${site} 2>/dev/null | openssl x509 -noout -enddate`
-  ]);
+const debug = true;
 
-  observables.push(
-    Observable.create(function(observer) {
-      command.stdout.on('data', function(data) {
-        const expirationDate = data
-          .toString()
-          .replace('notAfter=', '')
-          .replace('\n', '');
-
-        const timeAgo = moment(new Date(expirationDate))
-          .endOf('day')
-          .fromNow();
-
-        observer.next({
-          site,
-          timeAgo,
-          expirationDate,
-          daysLeft: moment(new Date(expirationDate)).diff(moment(), 'days'),
-          unix: moment(new Date(expirationDate)).unix()
-        });
-      });
-      command.stderr.on('data', function(data) {
-        observer.next(`${site}: Error`);
-      });
-    })
-  );
-});
-
-zip(...observables).subscribe(report => {
-  // Generate email message from report
-  const { subject, html } = generateMessage(sortBy(report, ['unix']));
-
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  const msg: any = {
-    to: process.env.EMAIL_TO.split(','),
-    from: 'upcert@adapter-dc.com',
-    subject,
-    html
-  };
-
-  sgMail.send(msg);
-});
+const parseDate = (string: string) => {
+  return string.trim().replace('Not After : ', '');
+};
 
 const generateMessage = report => {
   let html = '<table><tr><th>Expires</th><th>Site</th><th>Date</th></tr>';
   report.forEach(n => {
-    html += `<tr><td>${n.timeAgo}</td><td>${n.site}</td><td>${
+    html += `<tr><td>${n.timeAgo}</td><td>${n.host}</td><td>${
       n.expirationDate
     }</td></tr>`;
   });
@@ -69,4 +32,109 @@ const generateMessage = report => {
   };
 };
 
-// TODO Only email it the latest expires within the week or month?
+// Emit each container
+const containers = Observable.create(observer => {
+  spawn('docker', ['ps', '-q']).stdout.on('data', function(data) {
+    observer.next(
+      data
+        .toString()
+        .split('\n')
+        .filter(e => {
+          return e;
+        })
+    );
+    observer.complete();
+  });
+}).pipe(
+  mergeMap((x: string) => {
+    return x;
+  })
+);
+
+// Get container host name
+const getContainerHost = (container: string): Observable<any> => {
+  return Observable.create(observer => {
+    const command = spawn('sh', [
+      '-c',
+      `docker inspect -f '{{range $index, $value := .Config.Env}}{{println $value}}{{end}}' ${container} | grep VIRTUAL_HOST=`
+    ]);
+    command.stdout.on('data', function(data) {
+      observer.next({
+        container,
+        host: data
+          .toString()
+          .replace('VIRTUAL_HOST=', '')
+          .replace('\n', '')
+      });
+      observer.complete();
+    });
+    command.on('exit', function(code) {
+      // Also complete when exit code is 1
+      // These are containers that don't have a VIRTUAL_HOST
+      if (code === 1) {
+        observer.complete();
+      }
+    });
+  });
+};
+const getCertExpiration = ({ host, container }): Observable<any> => {
+  return Observable.create(observer => {
+    if (debug) {
+      observer.next({
+        host,
+        container,
+        expirationDate: parseDate(
+          '            Not After : Jun 25 01:02:56 2018 GMT'
+        )
+      });
+      observer.complete();
+    }
+    spawn('sh', [
+      '-c',
+      `openssl x509 -in /etc/certs/${host}.crt -noout -text | grep Not\ After`
+    ]).stdout.on('data', function(data) {
+      observer.next({
+        host,
+        container,
+        expirationDate: parseDate(data.toString())
+      });
+      observer.complete();
+    });
+  });
+};
+
+containers
+  .pipe(
+    mergeMap((container: string) => {
+      return getContainerHost(container);
+    }),
+    mergeMap((data: any) => {
+      return getCertExpiration(data);
+    }),
+    map((data: any) => {
+      const timeAgo = moment(new Date(data.expirationDate))
+        .endOf('day')
+        .fromNow();
+      const daysLeft = moment(new Date(data.expirationDate)).diff(
+        moment(),
+        'days'
+      );
+      const unix = moment(new Date(data.expirationDate)).unix();
+      return { ...data, timeAgo, daysLeft, unix };
+    })
+  )
+  .pipe(toArray())
+  .subscribe(report => {
+    // Generate email message from report
+    const { subject, html } = generateMessage(sortBy(report, ['unix']));
+
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    const msg: any = {
+      to: process.env.EMAIL_TO.split(','),
+      from: 'upcert@adapter-dc.com',
+      subject,
+      html
+    };
+
+    sgMail.send(msg);
+  });
