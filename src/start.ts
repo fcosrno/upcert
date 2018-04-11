@@ -146,7 +146,7 @@ containers
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
       const msg: any = {
         to: process.env.EMAIL_TO.split(','),
-        from: 'upcert@adapter-dc.com',
+        from: process.env.EMAIL_FROM,
         subject,
         html
       };
