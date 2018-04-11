@@ -53,12 +53,17 @@ const getContainerHost = (container: string): Observable<any> => {
       `docker inspect -f '{{range $index, $value := .Config.Env}}{{println $value}}{{end}}' ${container} | grep VIRTUAL_HOST=`
     ]);
     command.stdout.on('data', function(data) {
-      observer.next({
-        container,
-        host: data
-          .toString()
-          .replace('VIRTUAL_HOST=', '')
-          .replace('\n', '')
+      const hosts = data
+        .toString()
+        .replace('VIRTUAL_HOST=', '')
+        .replace('\n', '')
+        .split(',');
+
+      hosts.forEach(host => {
+        observer.next({
+          container,
+          host
+        });
       });
       observer.complete();
     });
