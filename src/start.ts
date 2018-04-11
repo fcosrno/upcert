@@ -14,7 +14,7 @@ const parseDate = (string: string) => {
 
 const generateMessage = report => {
   let html =
-    '<table border="1" cellpadding="5" cellspacing="5"><tr><th>Expires</th><th>Site</th><th>Proxy</th><th>Disk</th><th>LetsEncrypt</th></tr>';
+    '<table border="1" cellpadding="5" cellspacing="5"><tr><th>Expires *</th><th>Site</th><th>Proxy</th><th>Disk</th><th>CloudFlare</th></tr>';
   report.forEach(n => {
     html += `<tr><td>${n.timeAgo}</td><td>${n.host}</td><td>${
       n.expirationDate.proxy
@@ -23,6 +23,8 @@ const generateMessage = report => {
     }</td></tr>`;
   });
   html += '</table>';
+  html +=
+    '<p>* Expires is based on the Proxy date. Proxy is the date of the cert nginx-proxy is serving. If expired, this date would cause unpredictable errors. Disk is the date in the cert saved locally. If proxy differs from this date, you should restart nginx-proxy. CloudFlare is the date the public sees from their browsers.';
   return {
     subject: `The next certificate expires ${report[0].timeAgo}`,
     html
