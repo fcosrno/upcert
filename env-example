@@ -1,0 +1,2 @@
+SENDGRID_API_KEY="secret"
+EMAIL_TO="me@email.com"
