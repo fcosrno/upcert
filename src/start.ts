@@ -78,13 +78,11 @@ const getContainerHost = (container: string): Observable<any> => {
 };
 const getCertExpiration = ({ host, container }): Observable<any> => {
   return Observable.create(observer => {
-    if (debug) {
+    if (debug && process.env.LOCAL_DEV_DATE) {
       observer.next({
         host,
         container,
-        expirationDate: parseDate(
-          '            Not After : Jun 25 01:02:56 2018 GMT'
-        )
+        expirationDate: parseDate(process.env.LOCAL_DEV_DATE)
       });
       observer.complete();
     }
