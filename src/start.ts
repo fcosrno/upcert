@@ -151,6 +151,24 @@ containers
         html
       };
 
-      sgMail.send(msg);
+      sgMail
+        .send(msg)
+        .then(() => {
+          if (debug) {
+            console.log('Email sent successfully');
+          }
+        })
+        .catch(error => {
+          if (debug) {
+            //Log friendly error
+            console.error(error.toString());
+
+            //Extract error msg
+            const { message, code, response } = error;
+
+            //Extract response msg
+            const { headers, body } = response;
+          }
+        });
     }
   });
