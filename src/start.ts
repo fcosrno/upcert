@@ -6,7 +6,7 @@ import * as moment from 'moment';
 import { sortBy } from 'lodash';
 import * as sgMail from '@sendgrid/mail';
 
-const debug = true;
+const debug = process.env.DEBUG || false;
 
 const parseDate = (string: string) => {
   return string.trim().replace('Not After : ', '');
