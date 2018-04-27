@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start":
-      "ts-node --no-cache --require dotenv/config --inspect -- src/start.ts",
+    "start": "ts-node --no-cache --require dotenv/config --inspect -- src/start.ts",
     "dev": "nodemon -e ts -w ./src -x npm run start"
   },
   "keywords": [],
@@ -22,5 +21,8 @@
     "ts-node": "^5.0.1",
     "tsc-watch": "^1.0.17",
     "typescript": "^2.8.1"
+  },
+  "dependencies": {
+    "hoek": "^5.0.3"
   }
 }
