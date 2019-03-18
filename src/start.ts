@@ -1,10 +1,9 @@
-import { spawn } from 'child_process';
-import { Observable } from 'rxjs/Observable';
-import { map, mergeMap, toArray, distinct } from 'rxjs/operators';
-import dotenv from 'dotenv';
-import * as moment from 'moment';
-import { sortBy } from 'lodash';
 import * as sgMail from '@sendgrid/mail';
+import { spawn } from 'child_process';
+import { sortBy } from 'lodash';
+import * as moment from 'moment';
+import { Observable } from 'rxjs/Observable';
+import { distinct, map, mergeMap, toArray } from 'rxjs/operators';
 
 const debug = process.env.DEBUG || false;
 
@@ -136,7 +135,9 @@ const getDiskCertExpiration = ({ host, container }): Observable<any> => {
     }
     const command = spawn('sh', [
       '-c',
-      `openssl x509 -in /etc/certs/${host}.crt -noout -text | grep Not\\ After`
+      `openssl x509 -in ${
+        process.env.CERTS_PATH
+      }${host}.crt -noout -text | grep Not\\ After`
     ]);
     command.stdout.on('data', function(data) {
       observer.next({

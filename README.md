@@ -13,7 +13,7 @@ The script traverses all local containers to get a list of domains, defined as `
 
 ## Setup
 
-Create a `.env` file with two variables: `SENDGRID_API_KEY` and `EMAIL_TO`. You can add multiple emails to `EMAIL_TO` separated by a comma. Look at `env-example`.
+Create a `.env` file with two variables: `CERTS_PATH`, `SENDGRID_API_KEY` and `EMAIL_TO`. You can add multiple emails to `EMAIL_TO` separated by a comma. Look at `env-example`.
 
 ## Installation
 

@@ -1,3 +1,4 @@
+CERTS_PATH=/tmp/certs/
 SENDGRID_API_KEY="secret"
 EMAIL_TO="me@email.com"
 EMAIL_FROM="me@email.com"
