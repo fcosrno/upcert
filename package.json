@@ -11,18 +11,15 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@sendgrid/mail": "^6.2.1",
-    "@types/node": "^9.6.2",
-    "dotenv": "^5.0.1",
-    "lodash": "^4.17.5",
-    "moment": "^2.22.0",
-    "nodemon": "^1.17.3",
-    "rxjs": "^5.5.8",
-    "ts-node": "^5.0.1",
-    "tsc-watch": "^1.0.17",
-    "typescript": "^2.8.1"
-  },
-  "dependencies": {
-    "hoek": "^5.0.3"
+    "@sendgrid/mail": "6.3.1",
+    "@types/node": "11.11.3",
+    "dotenv": "7.0.0",
+    "lodash": "4.17.11",
+    "moment": "2.24.0",
+    "nodemon": "1.18.10",
+    "rxjs": "6.4.0",
+    "ts-node": "8.0.3",
+    "tsc-watch": "2.1.2",
+    "typescript": "3.3.3333"
   }
 }
