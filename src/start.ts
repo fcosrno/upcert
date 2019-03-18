@@ -2,7 +2,7 @@ import * as sgMail from '@sendgrid/mail';
 import { spawn } from 'child_process';
 import { sortBy } from 'lodash';
 import * as moment from 'moment';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { distinct, map, mergeMap, toArray } from 'rxjs/operators';
 
 const debug = process.env.DEBUG || false;

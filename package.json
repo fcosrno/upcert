@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node --no-cache --require dotenv/config --inspect -- src/start.ts",
+    "start": "ts-node --require dotenv/config src/start.ts --no-cache",
     "dev": "nodemon -e ts -w ./src -x npm run start"
   },
   "keywords": [],
